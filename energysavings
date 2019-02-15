@@ -10,7 +10,7 @@ from dfply import *
  
 
 #read in both data files
-directory = '\\\\dsmcentral\\datadirs-2\\Analytics\\Ad Hoc\\20190131 ILIP HOU Evaluation'
+directory = 'Ad Hoc\\20190131 ILIP HOU Evaluation'
 os.chdir(directory)
 
  
