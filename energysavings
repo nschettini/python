@@ -1,0 +1,117 @@
+mport pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import os
+from dfply import *
+
+ 
+
+ 
+
+#read in both data files
+directory = '\\\\dsmcentral\\datadirs-2\\Analytics\\Ad Hoc\\20190131 ILIP HOU Evaluation'
+os.chdir(directory)
+
+ 
+
+df = pd.read_excel('Infogroup_ILIP.xlsx')
+df2 = pd.read_excel('trm_match.xlsx')
+
+ 
+
+ 
+
+ 
+
+#display head of df
+df
+
+ 
+
+ 
+
+#remove columns not needed
+#list(df.columns.values)
+
+ 
+
+ 
+
+cols_wanted = ['ACCT_NO', 'BE Selected SIC Description', 'NAICS', 'Total.Gross.kWh.Savings','Total.Gross.kW.Savings']
+df = df[cols_wanted]
+df.head(3)
+
+ 
+
+ 
+
+#display head of df2
+df2.head()
+
+ 
+
+ 
+
+#merge two dataframes on NAICS
+df_merge=pd.merge(df,df2, on='NAICS')
+
+ 
+
+ 
+
+#Show head of merged data
+df_merge.head()
+
+ 
+
+ 
+
+#assign df contents of df_merge
+df = df_merge
+#group by facilityType and calculate weight
+df['wgt'] = df.groupby('FacilityType')['Total.Gross.kWh.Savings'].transform(lambda x: x/x.sum())
+df.head()
+
+ 
+
+ 
+
+#group by facility type and calculate weighted average
+#df.groupby("FacilityType").apply(lambda x: np.average(x['LightingHours'], weights=x['wgt'])).round(2)
+
+
+ 
+
+#np.average(df["LightingHours"], weights=df["wgt"]).round(2)
+
+
+##################################
+###########  UPDATED  ############
+#############  kWH  ##############
+##################################
+
+ 
+
+ 
+
+#using previous weights calculated from above, group by facility type and calculate weighted average by lighting hours
+dflighthours = df.groupby("FacilityType").apply(lambda x: np.average(x['LightingHours'], weights=x['wgt'])).round(2)
+dflighthours
+
+
+#group by facility type, sum columns, then apply sum/total
+dftest = df.groupby('FacilityType').sum().apply(lambda x: x / x.sum())
+#drop unwanted columns
+dftest = dftest.drop(['ACCT_NO', 'wgt', 'Total.Gross.kW.Savings', 'LightingHours', 'Unnamed: 3'], axis=1)
+dftest
+
+ 
+
+#multiply lighthours by sum/total kwh savings
+hours_kwh = dftest.loc[:,'Total.Gross.kWh.Savings'] * dflighthours
+hours_kwh.sum().round(2)
+
+ 
+
+df.to_csv('output.csv', header='True')
